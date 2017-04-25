@@ -24,7 +24,7 @@ class PascalVocWriter:
             Return a pretty-printed XML string for the Element.
         """
         rough_string = etree.tostring(elem, encoding='UTF-8')
-        rough_string = str(rough_string, encoding="UTF-8")
+        rough_string = str(rough_string).encode('UTF-8')
         root = etree.XML(rough_string)
         return etree.tostring(root, encoding='UTF-8', pretty_print=True)
 
