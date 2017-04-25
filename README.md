@@ -8,6 +8,9 @@ It is written in Python and uses Qt for its graphical interface.
 
 Annotations are saved as XML files in PASCAL VOC format, the format used by [ImageNet](http://www.image-net.org/).
 
+Update: Added support for local region descriptions (a descriptive phrase assigned to an bounding
+box region) for tasks such as [dense image captioning](https://arxiv.org/abs/1511.07571).
+
 ![](demo/demo3.jpg)
 
 [Watch a demo video by author tzutalin](https://youtu.be/p0nR2YsCY_U)

@@ -36,8 +36,9 @@ class Shape(object):
     point_size = 8
     scale = 1.0
 
-    def __init__(self, label=None, line_color=None):
+    def __init__(self, label=None, cap=None, line_color=None):
         self.label = label
+        self.caption = cap
         self.points = []
         self.fill = False
         self.selected = False
@@ -162,7 +163,7 @@ class Shape(object):
         self._highlightIndex = None
 
     def copy(self):
-        shape = Shape("%s" % self.label)
+        shape = Shape("%s" % self.label, "%s" % self.caption)
         shape.points = [p for p in self.points]
         shape.fill = self.fill
         shape.selected = self.selected

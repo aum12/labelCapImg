@@ -70,9 +70,10 @@ class PascalVocWriter:
         segmented.text = '0'
         return top
 
-    def addBndBox(self, xmin, ymin, xmax, ymax, name):
+    def addBndBox(self, xmin, ymin, xmax, ymax, name, cap=None):
         bndbox = {'xmin': xmin, 'ymin': ymin, 'xmax': xmax, 'ymax': ymax}
         bndbox['name'] = name
+        bndbox['caption'] = cap
         self.boxlist.append(bndbox)
 
     def appendObjects(self, top):
@@ -84,6 +85,15 @@ class PascalVocWriter:
             except NameError:
                 # Py3: NameError: name 'unicode' is not defined
                 name.text = each_object['name']
+            #add caption tag if shape object has a caption
+            if each_object['caption'] is not None:
+                caption = SubElement(object_item, 'caption')
+                try:
+                    caption.text = unicode(each_object['caption'])
+                except NameError:
+                    # Py3: NameError: name 'unicode' is not defined
+                    caption.text = each_object['caption']
+
             pose = SubElement(object_item, 'pose')
             pose.text = "Unspecified"
             truncated = SubElement(object_item, 'truncated')
@@ -128,13 +138,13 @@ class PascalVocReader:
     def getShapes(self):
         return self.shapes
 
-    def addShape(self, label, bndbox):
+    def addShape(self, label, cap, bndbox):
         xmin = int(bndbox.find('xmin').text)
         ymin = int(bndbox.find('ymin').text)
         xmax = int(bndbox.find('xmax').text)
         ymax = int(bndbox.find('ymax').text)
         points = [(xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax)]
-        self.shapes.append((label, points, None, None))
+        self.shapes.append((label, cap, points, None, None))
 
     def parseXML(self):
         assert self.filepath.endswith('.xml'), "Unsupport file format"
@@ -151,7 +161,9 @@ class PascalVocReader:
         for object_iter in xmltree.findall('object'):
             bndbox = object_iter.find("bndbox")
             label = object_iter.find('name').text
-            self.addShape(label, bndbox)
+            captag = object_iter.find('caption')
+            caption = None if captag is None else captag.text
+            self.addShape(label, caption, bndbox)
         return True
 
 

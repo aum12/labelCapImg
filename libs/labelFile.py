@@ -45,8 +45,9 @@ class LabelFile(object):
         for shape in shapes:
             points = shape['points']
             label = shape['label']
+            caption = shape['caption']
             bndbox = LabelFile.convertPoints2BndBox(points)
-            writer.addBndBox(bndbox[0], bndbox[1], bndbox[2], bndbox[3], label)
+            writer.addBndBox(bndbox[0], bndbox[1], bndbox[2], bndbox[3], label, caption)
 
         writer.save(targetFile=filename)
         return

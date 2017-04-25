@@ -223,6 +223,8 @@ class Canvas(QWidget):
             self.repaint()
         else:
             shape.label = self.selectedShape.label
+            if self.selectedShape.caption is not None:
+                shape.caption = self.selectedShape.caption
             self.deleteSelected()
             self.shapes.append(shape)
         self.selectedShapeCopy = None
@@ -554,9 +556,11 @@ class Canvas(QWidget):
         elif key == Qt.Key_Return and self.canCloseShape():
             self.finalise()
 
-    def setLastLabel(self, text):
+    def setLastLabel(self, text, cap):
         assert text
         self.shapes[-1].label = text
+        if cap is not None:
+            self.shapes[-1].caption = cap
         return self.shapes[-1]
 
     def undoLastLine(self):

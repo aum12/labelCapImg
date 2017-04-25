@@ -596,10 +596,20 @@ class MainWindow(QMainWindow, WindowMixin):
         if not self.canvas.editing():
             return
         item = item if item else self.currentItem()
-        text = self.labelDialog.popUp(item.text())
+        shape = self.itemsToShapes[item]
+        #print 'editlabel -- label: {}, caption: {}'.format(shape.label, shape.caption)
+        text, cap = self.labelDialog.popUp(shape.label, shape.caption)
         if text is not None:
-            item.setText(text)
+            shape.label = text
+            shape.caption = cap
+            item.setText(self.setLabelName(text, cap))
             self.setDirty()
+
+    def setLabelName(self, label, caption=None):
+        if caption is not None:
+            return label + ' [' + caption + ']'
+        else:
+            return label
 
     # Tzutalin 20160906 : Add file list and dock to move faster
     def fileitemDoubleClicked(self, item=None):
@@ -626,7 +636,8 @@ class MainWindow(QMainWindow, WindowMixin):
         self.actions.shapeFillColor.setEnabled(selected)
 
     def addLabel(self, shape):
-        item = HashableQListWidgetItem(shape.label)
+        itemName = self.setLabelName(shape.label, shape.caption)
+        item = HashableQListWidgetItem(itemName)
         item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
         item.setCheckState(Qt.Checked)
         self.itemsToShapes[item] = shape
@@ -646,8 +657,8 @@ class MainWindow(QMainWindow, WindowMixin):
 
     def loadLabels(self, shapes):
         s = []
-        for label, points, line_color, fill_color in shapes:
-            shape = Shape(label=label)
+        for label, cap, points, line_color, fill_color in shapes:
+            shape = Shape(label=label, cap=cap)
             for x, y in points:
                 shape.addPoint(QPointF(x, y))
             shape.close()
@@ -666,7 +677,7 @@ class MainWindow(QMainWindow, WindowMixin):
             self.labelFile.verified = self.canvas.verified
 
         def format_shape(s):
-            return dict(label=s.label,
+            return dict(label=s.label, caption=s.caption,
                         line_color=s.line_color.getRgb()
                         if s.line_color != self.lineColor else None,
                         fill_color=s.fill_color.getRgb()
@@ -703,9 +714,18 @@ class MainWindow(QMainWindow, WindowMixin):
 
     def labelItemChanged(self, item):
         shape = self.itemsToShapes[item]
-        label = item.text()
-        if label != shape.label:
-            shape.label = item.text()
+        # extract label and caption from item str
+        labellist = item.text().split('[')
+        try:
+            label = labellist[0].trimmed()
+            cap = labellist[1][:-1].trimmed() if len(labellist) > 1 else None
+        except AttributeError:
+            # PyQt5: AttributeError: 'str' boject has no attribute 'trimmed'
+            label = labellist[0].strip()
+            cap = labellist[1][:-1].strip() if len(labellist) > 1 else None
+        if (label != shape.label) | (cap != shape.caption):
+            shape.label = label
+            shape.caption = cap
             self.setDirty()
         else:  # User probably changed item visibility
             self.canvas.setShapeVisible(shape, item.checkState() == Qt.Checked)
@@ -720,10 +740,10 @@ class MainWindow(QMainWindow, WindowMixin):
             self.labelDialog = LabelDialog(
                 parent=self, listItem=self.labelHist)
 
-        text = self.labelDialog.popUp(text=self.prevLabelText)
+        text, cap = self.labelDialog.popUp(text=self.prevLabelText)
         if text is not None:
             self.prevLabelText = text
-            self.addLabel(self.canvas.setLastLabel(text))
+            self.addLabel(self.canvas.setLastLabel(text, cap))
             if self.beginner():  # Switch to edit mode.
                 self.canvas.setEditing(True)
                 self.actions.create.setEnabled(True)
